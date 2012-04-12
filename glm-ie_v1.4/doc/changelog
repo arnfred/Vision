@@ -1,0 +1,8 @@
+ GENERALISED LINEAR MODELS: INFERENCE AND ESTIMATION Toolbox version 1.4
+    for GNU Octave 3.3.x and Matlab 7.x
+
+Copyright (c) by Hannes Nickisch, 2010-10-20.
+
+Changes and small incremental bug fixes applied since last release.
+
+Added inf/diaginv_factorial.m to allow for mean field inference.
