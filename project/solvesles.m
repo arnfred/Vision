@@ -15,7 +15,7 @@ function [result elapsed] = solvesles()
   nfilters = mrf.nfilters
 
   % FOR TESTING: TODO: change back
-  nfilters = 1;
+  % nfilters = 1;
 
   % Express B in terms of the filters of the mrf
   % B = ones(0,prod(dims));
@@ -28,7 +28,7 @@ function [result elapsed] = solvesles()
   %  end
 
   % FOR TESTING: TODO: change back
-  B = matConv2(mrf.filter(1), dims, 'valid');
+  % B = matConv2(mrf.filter(1), dims, 'valid');
 
   % Load Z matrices
   load('z.mat');
