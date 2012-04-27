@@ -12,16 +12,23 @@ function [result elapsed] = solvesles()
 
   % Get mrf
   mrf = learned_models.cvpr_3x3_foe;
+  nfilters = mrf.nfilters
+
+  % FOR TESTING: TODO: change back
+  nfilters = 1;
 
   % Express B in terms of the filters of the mrf
   % B = ones(0,prod(dims));
   B = mat([0 prod(dims)], 'valid');
 
   % For each filter, create a fake convolution matrix
-  for i=1:mrf.nfilters
-	  Bi = matConv2(mrf.filter(i), dims, 'valid');
-	  B = vertcat(B,Bi); % B is 51200 x 6724
-  end
+  %  for i=1:mrf.nfilters
+  %      Bi = matConv2(mrf.filter(i), dims, 'valid');
+  %      B = vertcat(B,Bi); % B is 51200 x 6724
+  %  end
+
+  % FOR TESTING: TODO: change back
+  B = matConv2(mrf.filter(1), dims, 'valid');
 
   % Load Z matrices
   load('z.mat');
@@ -37,7 +44,7 @@ function [result elapsed] = solvesles()
   result = zeros(dims(1), dims(2), 3);
 
   % Number of rows in diagonal (dims - 2 because the 'valid' fft transform gives back a smaller matrix) 
-  N = prod(dims - 2) * mrf.nfilters; % size of filter (80*80) times number of filters (8)
+  N = prod(dims - 2) * nfilters; % size of filter (80*80) times number of filters (8)
 
   % Iterate over all Z's, solving the systems one by one
   % for i = 1:number_of_zs
@@ -60,7 +67,7 @@ function [result elapsed] = solvesles()
 	  F 			= matFFTNmask(true(size(d))); % DFT matrix
 	  M1			= @(r) r;
 	  M2			= @(r) r ./ diag_A;
-	  M3			= @(r) mvmMinv(F, d(:), r);
+	  M3			= @(r) [F']*((F*r)./d);
 
 
 	  % Plug in arguments and calculate away, time the operation
@@ -86,12 +93,3 @@ function [result elapsed] = solvesles()
 
 	  
 end
-
-  % M\r in the DFT domain (From hannes nickish code)
-  function z = mvmMinv(F,d, r)
-	  if numel(r)>numel(d)
-		  z = cx2re([F']*((F*re2cx(r))./d));
-	  else
-		  z = [F']*((F*r)./d);
-	  end
-  end
