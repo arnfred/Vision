@@ -1,6 +1,6 @@
 
 % Matlab script for solving a bunch of linear systems based on the fields of
-% experts mrf
+% experts mrf % This is very expensive when we use valid fft and not circ
 function [result elapsed res] = solvesles()
 
   % Dimensions
@@ -30,7 +30,7 @@ function [result elapsed res] = solvesles()
   end
 
   % FOR TESTING: TODO: change back
-  % B = matConv2(mrf.filter(1), dims, 'circ');
+  % B = matConv2(mrf.filter(1), dims, 'valid');
 
   % Load Z matrices
   load('z.mat');
