@@ -26,7 +26,7 @@ function [result elapsed res] = solvesles()
   % For each filter, create a fake convolution matrix
   for i=1:mrf.nfilters
       Bi = matConv2(mrf.filter(i), dims, 'valid');
-      B = vertcat(B,Bi); % B is 51200 x 6724
+      B = vertcat(B,Bi); % B is (51200 + 6724) x 6724
   end
 
   % FOR TESTING: TODO: change back
@@ -69,7 +69,7 @@ function [result elapsed res] = solvesles()
 	  % Prepare preconditioners
 	  A			= B'*diagonal*B;
 	  diag_A		= diag(A);
-	  d 			= mean(diag(diagonal)) * diagFAtAFt(B,'cheap');
+	  d 			= mean(diag(diagonal)) * diagFAtAFt(B,'cheap'); % This is very expensive when we use valid fft and not circ
 	  F 			= matFFTNmask(true(dims)); % DFT matrix
 	  M{1}			= @(r) r;
 	  M{2}			= @(r) r ./ diag_A;
