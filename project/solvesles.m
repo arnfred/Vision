@@ -1,7 +1,7 @@
 
 % Matlab script for solving a bunch of linear systems based on the fields of
 % experts mrf
-function [result elapsed] = solvesles()
+function [result elapsed res] = solvesles()
 
   % Dimensions
   dims = [82 82];
@@ -15,20 +15,22 @@ function [result elapsed] = solvesles()
   nfilters = mrf.nfilters
 
   % FOR TESTING: TODO: change back
-  nfilters = 1;
+  % nfilters = 1;
 
   % Express B in terms of the filters of the mrf
   % B = ones(0,prod(dims));
-  B = mat([0 prod(dims)], 'valid');
+
+  % Start with identity matrix
+  B = matDiag(ones(prod(dims),1));
 
   % For each filter, create a fake convolution matrix
-  %  for i=1:mrf.nfilters
-  %      Bi = matConv2(mrf.filter(i), dims, 'valid');
-  %      B = vertcat(B,Bi); % B is 51200 x 6724
-  %  end
+  for i=1:mrf.nfilters
+      Bi = matConv2(mrf.filter(i), dims, 'valid');
+      B = vertcat(B,Bi); % B is 51200 x 6724
+  end
 
   % FOR TESTING: TODO: change back
-  B = matConv2(mrf.filter(1), dims, 'valid');
+  % B = matConv2(mrf.filter(1), dims, 'circ');
 
   % Load Z matrices
   load('z.mat');
@@ -36,60 +38,57 @@ function [result elapsed] = solvesles()
   % Now we should have a cell array called zes in scope
   [~, number_of_zs] = size(zes);
 
-  % Set up timer
-  elapsed = zeros(3,1);
-  tstart = zeros(3,1);
-
   % Set up return matrix as the last 4 matrices:
   result = zeros(dims(1), dims(2), 3);
 
   % Number of rows in diagonal (dims - 2 because the 'valid' fft transform gives back a smaller matrix) 
-  N = prod(dims - 2) * nfilters; % size of filter (80*80) times number of filters (8)
+  % N = prod(dims - 2) * nfilters; % size of filter (80*80) times number of filters (8)
+  N = prod(dims - 2) * nfilters + prod(dims); % Add another 6724 for the diagonal
+  % TODO: this is only for testing
+  % N = prod(dims) * nfilters; % size of filter (80*80) times number of filters (8)
+
+  % initialie elapsed
+  for i = 1:3 elapsed{i} = 0; end
 
   % Iterate over all Z's, solving the systems one by one
-  % for i = 1:number_of_zs
-  for i = 1:5
+  for i = 1:number_of_zs
+  % for i = 1:5
 	  
 	  % Get diagonal matrix
 	  origDiagonal	= full(cell2mat(zes(i)));
 
 	  % Cut off identity matrix saved at the end
-	  diagonal		= matDiag(origDiagonal(1:N));
-	  sqrtDiagonal	= matDiag(sqrt(origDiagonal(1:N)));
+	  % diagonal		= matDiag(origDiagonal(1:N));
+	  diagonal		= matDiag(origDiagonal);
+	  % sqrtDiagonal	= matDiag(sqrt(origDiagonal(1:N)));
+	  sqrtDiagonal	= matDiag(sqrt(origDiagonal));
      
 	  % Calculate right hand side
 	  rhs			= B' * sqrtDiagonal * randn(N, 1); % n0 in notes
 
 	  % Prepare preconditioners
-	  A				= B'*diagonal*B;
+	  A			= B'*diagonal*B;
 	  diag_A		= diag(A);
 	  d 			= mean(diag(diagonal)) * diagFAtAFt(B,'cheap');
-	  F 			= matFFTNmask(true(size(d))); % DFT matrix
-	  M1			= @(r) r;
-	  M2			= @(r) r ./ diag_A;
-	  M3			= @(r) [F']*((F*r)./d);
+	  F 			= matFFTNmask(true(dims)); % DFT matrix
+	  M{1}			= @(r) r;
+	  M{2}			= @(r) r ./ diag_A;
+	  M{3}			= @(r) [F']*((F*r)./d(:));
 
+	  % Loop over the different preconditioning schemes
+	  for (j = 1:3) 
 
-	  % Plug in arguments and calculate away, time the operation
-	  tstart(1)		= cputime;
-	  [u1, iter1]	= conjugate_gradients(A, rhs, M1);
-	  elapsed(1)	= elapsed(1) + (cputime - tstart(1));
+		  tstart{j}					= cputime;
+		  [u{j} iter{j} d res{j}]	= conjugate_gradients(A, rhs, M{j});
+		  elapsed{j}				= elapsed{ j } + cputime - tstart{ j };
 
-	  % Now do the same, but with diag(A) preconditioning
-	  tstart(2)		= cputime;
-	  [u2, iter2]	= conjugate_gradients(A, rhs, M2);
-	  elapsed(2)	= elapsed(2) + (cputime - tstart(2));
-
-	  % Now with diagonal in fuirier space as preconditioning
-	  tstart(3)		= cputime;
-	  [u3, iter3]	= conjugate_gradients(A, rhs, M3);
-	  elapsed(3)	= elapsed(3) + (cputime - tstart(3));
+	  end
 
   end
 
-  result(:,:,1)	= reshape(u1, dims);
-  result(:,:,2)	= reshape(u2, dims);
-  result(:,:,3)	= reshape(u3, dims);
+  result(:,:,1)	= reshape(u{1}, dims);
+  result(:,:,2)	= reshape(u{2}, dims);
+  result(:,:,3)	= reshape(u{3}, dims);
 
 	  
 end
