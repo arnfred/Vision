@@ -13,8 +13,8 @@ function d = diagFAtAFt(A,opt)
       di = diagFAtAFt(arg{i},opt);
       if numel(di)>0
         d = d + di;
-      else
-        d = []; return
+      % else
+      % d = []; return
       end
     end
   elseif strcmp(type(A),'scale')

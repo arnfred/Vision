@@ -51,9 +51,10 @@ end
 % M = mean(R)*X'*X + mean(P)*B'*B
 % Then M\r is implemented as pointwise division in the DFT domain.
 if isempty(prec) || prec
-  fftdiag = ~isnumeric(X) && ~isnumeric(B);
+  fftdiag = ~isnumeric(X); %&& ~isnumeric(B);
   if fftdiag
-    dX = diagFAtAFt(X,'cheap'); dB = diagFAtAFt(B,'cheap');
+    dX = diagFAtAFt(X,'cheap'); 
+    dB = diagFAtAFt(B,'cheap');
     fftdiag = numel(dX)>0 && numel(dB)>0;
   end
   if fftdiag
