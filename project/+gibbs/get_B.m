@@ -1,6 +1,6 @@
 
 % Returns a filter matrix based on the filters
-function B = get_B(mrf)
+function B = get_B(mrf, dims)
 
 	% Start out with an empty B matrix. NOTE: mat/@mat/diagFAtAFt.m was commented
 	% out at line 16-17 to prevent it from returning and empty matrix
