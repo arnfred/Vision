@@ -34,7 +34,7 @@ function p = z_distribution(this, x)
   ndims   = this.ndims;
   nscales = this.nscales;
   ndata   = size(x, 2);
-  
+
   x_mu = bsxfun(@minus, x, this.mu);
   if (iscell(this.precision))
     norm_const = zeros(nscales, 1);

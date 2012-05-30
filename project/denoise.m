@@ -16,12 +16,13 @@ function [img_denoised] = denoise()
 	N_padded				= pml.support.mirror_boundary(img_noisy, border);
 	u						= N_padded(:);
   	mrf.imdims				= size(N_padded);
+	mrf.conv_method 		= 'circular';
 
 	% Initialize statistics
-	psnrs					= zeros(1, max_iters);
-	ssims					= zeros(1, max_iters); % NOTE: comparison index, I figure
-	mapd					= zeros(1, max_iters);
-	cpu_time				= zeros(1, max_iters);
+	psnrs					= zeros(1, max_iter);
+	ssims					= zeros(1, max_iter); % NOTE: comparison index, I figure
+	mapd					= zeros(1, max_iter);
+	cpu_time				= zeros(1, max_iter);
 
 	% Get filter matrix
 	B						= gibbs.get_B(mrf);

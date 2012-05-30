@@ -4,7 +4,7 @@
 function u = sample_u(mrf, z, B, sigma)
 
 	% Number of rows in diagonal
-	N 			= prod(mrf.imdims) * mrf.nfilters; % size of filter (80*80) times number of filters (8)
+	N 			= prod(mrf.imdims) * mrf.nfilters; % size of filter (82*82) times number of filters (8)
 
 	% Calculate right hand side
 	rhs			= B' * matDiag(sqrt(z)) * randn(N, 1);
@@ -12,6 +12,6 @@ function u = sample_u(mrf, z, B, sigma)
 	% Now calculate u
 	[u, k, res]	= cg(B, z, rhs, mrf.epsilon);
 
-	k
+	conjugate_gradient_iterations = k
 
 end

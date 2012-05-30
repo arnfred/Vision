@@ -6,7 +6,7 @@ function [img_noisy img_clean] = denoise_init_img(sigma)
 	idx = 5; % choose index of img_names
 
 	% Load image and scale
-	img_clean = double(imread(sprintf('../images/denoising/%s', img_names{idx})));
+	img_clean = double(imread(sprintf('images/denoising/%s', img_names{idx})));
 	img_clean = imresize(img_clean, scale);
 
 	% Create noisy test_image

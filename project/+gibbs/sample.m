@@ -19,14 +19,18 @@ function u = sample(mrf, start_sample, B, sigma, max_iter)
 		
 		% First get z
 		z				= gibbs.sample_z(mrf, u);
+		size(z)
+		plot(sort(z))
+		pause
 
 		% Then get u
 		u				= gibbs.sample_u(mrf, z, B, sigma);
 
 		% Give me something to look at while I wait
-		% u_norm 			= (u - min(u(:))) / (max(u) - min(u));
-		% imshow(reshape(u_norm,82,82))
-		% drawnow
+		imagesc(reshape(u,82,82))
+		colormap('gray')
+		drawnow
+		pause
 
 		% Calculate the energy of u
 		energy(i)		= mrf.energy(u);
