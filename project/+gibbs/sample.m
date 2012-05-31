@@ -1,9 +1,5 @@
 function u = sample(mrf, start_sample, B, sigma, max_iter)
 
-	% Add path
-	addpath('mat');
-	addpath('inf');
-
 	% Initialize Burn-in and treshold
 	burn_treshold	= 0.05;
 	max_burn		= 100;
@@ -17,8 +13,8 @@ function u = sample(mrf, start_sample, B, sigma, max_iter)
 
 		i
 		
-		% First get z
-		z				= gibbs.sample_z(mrf, u);
+		% First get z (In the darmstadt paper they use the initial sample)
+		z				= gibbs.sample_z(mrf, start_sample);
 		size(z)
 		plot(sort(z))
 		pause

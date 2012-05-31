@@ -45,7 +45,10 @@ function img_denoised = denoise_mmse(mrf, img_clean, img_noisy, sigma, rb, doplo
   end
   
   mrf.update_filter_matrices = true;
-  mrf.conv_method = 'valid';
+
+  % TEMPORARY EDIT
+  % mrf.conv_method = 'valid';
+  mrf.conv_method = 'circular';
   
   nsamplers = 4;
   max_iters = ceil(1000 / nsamplers); % use at most this many samples to obtain the denoised image
@@ -137,8 +140,17 @@ function img_denoised = denoise_mmse(mrf, img_clean, img_noisy, sigma, rb, doplo
 	  % Note: First we sample Z, given the entire vector of x for the given sampler
       z = mrf.sample_z(x(:,i));
 
+
 	  % Note: Then we sample x and x_mu, which is the means for the gaussian distributions (for rao-blackwellization)
-      [x(:,i), x_mu(:,i), zescur] = sample_x_denoising(mrf, z, N_padded(:), sigma, zescur);
+      [x(:,i), x_mu(:,i)] = sample_x_denoising(mrf, z, N_padded(:), sigma);
+
+	  % EDIT for saving z
+	  if (i == 4)
+		z_theirs = z;
+		u_theirs = x(:,i);
+		save('iteration_1_theirs','z_theirs','u_theirs');
+	  	pause;
+	  end
 
       % save all samples in the burn-in phase
       if burnin
@@ -264,7 +276,7 @@ end
 
 % Sample from the posterior distribution p(x|z,y)
 % The variable names W, Z, x, z, y, and sigma are used as described in the paper (and suppl. material)
-function [x, x_mu, zescur] = sample_x_denoising(this, z, y, sigma, zescur)
+function [x, x_mu] = sample_x_denoising(this, z, y, sigma)
   
   npixels = prod(this.imdims);
   nfilters = this.nfilters;
@@ -286,9 +298,6 @@ function [x, x_mu, zescur] = sample_x_denoising(this, z, y, sigma, zescur)
   
   Wt = vertcat(Wt{:}); % This is B
   Z = spdiags(vertcat(z{:}), 0, N, N); % This is pi
-
-  % Save diagonal matrix
-  % zescur{end + 1} = diag(Z);
 
   % get random normal
   r = randn(N, 1); % n0 in notes

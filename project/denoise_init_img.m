@@ -1,4 +1,4 @@
-function [img_noisy img_clean] = denoise_init_img(sigma)
+function [img_clean img_noisy] = denoise_init_img(sigma)
 
 	% Set some variables
 	scale	= 1/8; % As used in Darmstadt paper
