@@ -313,8 +313,4 @@ function [x, x_mu] = sample_x_denoising(this, z, y, sigma)
   x_mu = solve_sle(y / sigma^2);
   x = x_mu + solve_sle(W_sqrtZ_r);
   
-  
-  % Save the x I have
-  zescur{end + 1} = x - x_mu;
-  
 end

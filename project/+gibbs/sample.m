@@ -14,19 +14,19 @@ function u = sample(mrf, start_sample, B, sigma, max_iter)
 		i
 		
 		% First get z (In the darmstadt paper they use the initial sample)
-		z				= gibbs.sample_z(mrf, start_sample);
+		z				= gibbs.sample_z(mrf, u);
 		size(z)
 		plot(sort(z))
-		pause
+		% pause
 
-		% Then get u
-		u				= gibbs.sample_u(mrf, z, B, sigma);
+		% Then get u and u_mean
+		[u u_mean]		= gibbs.sample_u(mrf, z, start_sample, B, sigma);
 
 		% Give me something to look at while I wait
 		imagesc(reshape(u,82,82))
 		colormap('gray')
 		drawnow
-		pause
+		% pause
 
 		% Calculate the energy of u
 		energy(i)		= mrf.energy(u);
