@@ -1,49 +1,43 @@
 % Denoise function using gibbs sampling
 
-function [img_denoised] = denoise()
+function [u u_mean iter iter_mu burn_iter psnr psnr_rb] = denoise(sigma, scaling, max_burn, max_iter)
 
 	% Set variables
-	sigma 					= 10;
-	mrf 					= learned_models.cvpr_3x3_foe;
-	border					= 9; % Specified in darmstadt paper
-	max_iter				= 400;
-	max_burnin				= 100;
+	if (nargin < 1)	sigma				= 10; end
+	if (nargin < 2)	scaling				= 1; end
+	if (nargin < 3)	max_burn			= 5000; end  % These are cg iterations (about 200 per gibbs iteration)
+	if (nargin < 4)	max_iter			= 20000; end % Also cg iterations
 
 	% Get images
-	[img_clean img_noisy]	= denoise_init_img(sigma);
+	[img_clean img_noisy]				= denoise_init_img(sigma);
+	border								= 9; % Specified in darmstadt paper
+	N_padded							= pml.support.mirror_boundary(img_noisy, border);
+	u									= N_padded(:);
 
-	% Pad noisy image and note image dimensions
-	N_padded				= pml.support.mirror_boundary(img_noisy, border);
-	u						= N_padded(:);
-  	mrf.imdims				= size(N_padded);
-	mrf.conv_method 		= 'circular';
+	% set up MRF
+	mrf									= learned_models.cvpr_3x3_foe;
+  	mrf.imdims							= size(N_padded);
+	mrf.conv_method 					= 'circular';
 
-	% Initialize statistics
-	psnrs					= zeros(1, max_iter);
-	ssims					= zeros(1, max_iter); % NOTE: comparison index, I figure
-	mapd					= zeros(1, max_iter);
-	cpu_time				= zeros(1, max_iter);
+	% Initialize function for getting psnr
+	psnr_fun							= @(noisy) get_psnr(mrf, img_clean, noisy, border);
 
 	% Get filter matrix
-	B						= gibbs.get_B(mrf);
+	B									= gibbs.get_B(mrf);
 
-	% Run the gibbs sampling for burn i
-	u						= gibbs.sample(mrf, u, B, sigma, max_burnin); % 100 is max_iter for burn_in
+	% Run the gibbs for a while to burn in
+	[u_b u_mu_b i_b i_mu_b p_b p_mu_b]	= gibbs.sample(mrf, u, B, sigma, max_burn, psnr_fun);
 
-	for i = 1:max_iter
+	% Now run the sampling to collect the denoised image
+	[u_s u_mu_s i_s i_mu_s p_s p_mu_s]	= gibbs.sample(mrf, u_b(:,end), B, sigma, max_iter, psnr_fun);
 
-		% get a denoised image
-		u						= img_denoise(u, B);
-
-		% Check if the denoised image is below a certain treshold
-		ssims					= stats.ssims(u, img_clean);
-
-		% TODO: find out exactly what measurements are needed here
-	end
-
-
-
-
-
+	% Collect data for output
+	u									= [u_b u_s]; 				% each iteration of the image
+	u_mean								= [u_mu_b u_mu_s];			% each iteration of the mean of the image
+	iter								= [i_b i_s];				% How many iterations for each image
+	iter_mu								= [i_mu_m i_mu_s];
+	burn_iter							= [sum(i_mu_b) sum(i_b)];	% The total sum of burn iterations
+	psnr								= [p_b p_s];				% The signal to noise ration per iteration
+	psnr_mu								= [p_mu_b p_mu_s];			% The signal to noise ration per iteration for the rao blackwellisation
 
 end

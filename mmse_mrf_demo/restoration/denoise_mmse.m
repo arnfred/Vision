@@ -70,9 +70,7 @@ function img_denoised = denoise_mmse(mrf, img_clean, img_noisy, sigma, rb, doplo
   % The total number of pixels
   npixels = prod(mrf.imdims);
 
-  % TODO: What is mr and mc?
   mr = border;  mc = border;
-  % TODO: what is ridx and cidx? Area to discard maybe?
   ridx = 1+mr:mrf.imdims(1)-mr; cidx = 1+mc:mrf.imdims(2)-mc;
   [rs, cs] = ndgrid(ridx, cidx);
   % indices of interior pixels
@@ -311,6 +309,7 @@ function [x, x_mu] = sample_x_denoising(this, z, y, sigma)
   % solve system of linear equations
   solve_sle = pml.numerical.sle_spd_solver(W_Z_Wt);
   x_mu = solve_sle(y / sigma^2);
-  x = x_mu + solve_sle(W_sqrtZ_r);
+  x_delta = solve_sle(W_sqrtZ_r);
+  x = x_mu + x_delta;
   
 end

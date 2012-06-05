@@ -21,24 +21,11 @@ function [c,k,res] = cg(X, R, b, epsilon)
 	kmax	= 500;
 	c		= zeros(size(b));
 	tol		= 1e-3;
-	prec	= [];
-
 
 	% Setting up variables
 	nb 		= norm(b,'fro');                        % |b|
-	B		= matDiag(zeros(size(b)));
+	B		= matDiag(ones(size(b)));
 	res 	= zeros(kmax+1,1);
-
-
-	% Check if fast Jacobi-DFT preconditioner is possible.
-	% If it is, then we use as preconditioner the circulant matrix
-	% M = mean(R)*X'*X + mean(P)*B'*B
-	% Then M\r is implemented as pointwise division in the DFT domain.
-	dX 		= diagFAtAFt(X,'cheap'); 
-    R_mean 	= mean(R);
-	d 		= R_mean*dX + epsilon;
-	F 		= matFFTNmask(true(size(d))); d = d(:); % DFT matrix
-	mvmMinvfun = @(r) mvmMinv(F,d, r);
 
 
 	% Prepare fast function for matrix multiplication
@@ -47,20 +34,16 @@ function [c,k,res] = cg(X, R, b, epsilon)
 	z  		= r;
 	res(1) 	= norm(r,'fro')^2;
 
-	z = mvmMinvfun(r);
-	rs = r(:)'*z(:);
+	z = r;
 
 	for k=1:kmax
 		w = mvmAfun(z);
-		alpha = rs/(z(:)'*w(:));
+		alpha = res(k)/(z(:)'*w(:));
 		c = c + alpha*z;
 		r = r - alpha*w;
 		res(k+1) = norm(r,'fro')^2;
-		s = mvmMinvfun(r);
-		rs_old = rs;
-		rs = r(:)'*s(:);
-		beta = rs/rs_old;
-		z = s + beta*z;
+		beta = res(k+1)/res(k);
+		z = r + beta*z;
 		if sqrt(res(k+1))<tol*nb
 			break
 		end
@@ -76,11 +59,4 @@ function [c,k,res] = cg(X, R, b, epsilon)
 		v = [X']*RXw + [B']*PBw;     % the [] around the transpose is needed by Octave
 	end
 
-	function z = mvmMinv(F,d, r)                             % M\r in the DFT domain
-		if numel(r)>numel(d)
-			z = cx2re([F']*((F*re2cx(r))./d));
-		else
-	  		z = [F']*((F*r)./d);
-  		end
-	end
 end
