@@ -1,12 +1,13 @@
 % Denoise function using gibbs sampling
 
-function [u u_mean iter iter_mu burn_iter psnr psnr_rb] = denoise(sigma, scaling, max_burn, max_iter)
+function [u u_mu iter iter_mu burn_iter psnr psnr_mu] = denoise(sigma, scaling, remove_scales, max_burn, max_iter)
 
 	% Set variables
 	if (nargin < 1)	sigma				= 10; end
 	if (nargin < 2)	scaling				= 1; end
-	if (nargin < 3)	max_burn			= 5000; end  % These are cg iterations (about 200 per gibbs iteration)
-	if (nargin < 4)	max_iter			= 20000; end % Also cg iterations
+	if (nargin < 3)	remove_scales		= 0; end
+	if (nargin < 4)	max_burn			= 5000; end  % These are cg iterations (about 200 per gibbs iteration)
+	if (nargin < 5)	max_iter			= 20000; end % Also cg iterations
 
 	% Get images
 	[img_clean img_noisy]				= denoise_init_img(sigma);
@@ -18,6 +19,9 @@ function [u u_mean iter iter_mu burn_iter psnr psnr_rb] = denoise(sigma, scaling
 	mrf									= learned_models.cvpr_3x3_foe;
   	mrf.imdims							= size(N_padded);
 	mrf.conv_method 					= 'circular';
+
+	% Modify the scales of the MRF
+	mrf									= modify_scales(mrf, scaling, remove_scales);
 
 	% Initialize function for getting psnr
 	psnr_fun							= @(noisy) get_psnr(mrf, img_clean, noisy, border);
@@ -33,10 +37,10 @@ function [u u_mean iter iter_mu burn_iter psnr psnr_rb] = denoise(sigma, scaling
 
 	% Collect data for output
 	u									= [u_b u_s]; 				% each iteration of the image
-	u_mean								= [u_mu_b u_mu_s];			% each iteration of the mean of the image
+	u_mu								= [u_mu_b u_mu_s];			% each iteration of the mean of the image
 	iter								= [i_b i_s];				% How many iterations for each image
-	iter_mu								= [i_mu_m i_mu_s];
-	burn_iter							= [sum(i_mu_b) sum(i_b)];	% The total sum of burn iterations
+	iter_mu								= [i_mu_b i_mu_s];			% Iterations for calculating the mean
+	burn_iter							= [sum(i_b) sum(i_mu_b)];	% The total sum of burn iterations
 	psnr								= [p_b p_s];				% The signal to noise ration per iteration
 	psnr_mu								= [p_mu_b p_mu_s];			% The signal to noise ration per iteration for the rao blackwellisation
 
