@@ -142,14 +142,6 @@ function img_denoised = denoise_mmse(mrf, img_clean, img_noisy, sigma, rb, doplo
 	  % Note: Then we sample x and x_mu, which is the means for the gaussian distributions (for rao-blackwellization)
       [x(:,i), x_mu(:,i)] = sample_x_denoising(mrf, z, N_padded(:), sigma);
 
-	  % EDIT for saving z
-	  if (i == 4)
-		z_theirs = z;
-		u_theirs = x(:,i);
-		save('iteration_1_theirs','z_theirs','u_theirs');
-	  	pause;
-	  end
-
       % save all samples in the burn-in phase
       if burnin
         x_burnin(:, i, iter) = x(:,i);
