@@ -1,14 +1,20 @@
-function [f] = overview(psnr, iter, burn_iter, name, auto)
+function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name, auto)
 
+	% Set some sane defaults
+	if (nargin < 8) auto = 0; end
+	if (nargin < 7) name = 0; end
+	if (nargin < 6) range = [1 5000 16 32]; end
+	
 	% Get new figure
 	f = figure;
 	hold on
 
 	% Some variables
 	sigma			= [0.05 0.1 0.15];
-	elements		= 3;
-	colors_area		= [.95 .99 .99; .99 .95 .99; .99 .99 .95];
-	colors_line		= [.005 .7 .7; .7 .005 .7; .7 .7 .005];
+	elements		= numel(variable);
+	colors_area		= [.95 .99 .99; .99 .95 .99; .99 .99 .95; .95 .99 .95];
+	colors_line		= [.005 .7 .7; .7 .005 .7; .7 .7 .005; .005 .7 .005];
+	color_burn		= [.5 .005 .005 ];
 	plots			= zeros(1,3);
 	areas			= zeros(1,3);
 
@@ -57,11 +63,11 @@ function [f] = overview(psnr, iter, burn_iter, name, auto)
 		% Now plot the psnr
 		x = 1:numel(psnr{k});
 		plots(k) = plot(x, psnr{k}(x),'Color',colors_line(k,:));
-		axis([1 5000 16 32])
+		axis(range)
 
 		% Plot the burn-in cutoff
 		psnr{elements + 1}(burn_iter{3}) = min_h;
-		line([burn_iter{k} burn_iter{k}], [psnr{k+1}(burn_iter{k}) psnr{k}(burn_iter{k})], 'Color', [0.1 0.1 0.1]);
+		line([burn_iter{k} burn_iter{k}], [psnr{k+1}(burn_iter{k}) psnr{k}(burn_iter{k})], 'Color', color_burn);
 
 	end
 
@@ -78,15 +84,20 @@ function [f] = overview(psnr, iter, burn_iter, name, auto)
 	xlabel('Conjugate Gradients Iterations');
 	ylabel('psnr');
 
+	legend_text = {};
+	for i = 1:elements
+		legend_text{i} = [var_name, ' = ', num2str(variable(i))];
+	end
+
 	% Set legend
-	legend(areas, ['Sigma = ',num2str(sigma(1))], ['Sigma = ',num2str(sigma(2))], ['Sigma = ',num2str(sigma(3))], 'Location', 'SouthEast');
+	legend(areas, legend_text, 'Location', 'SouthEast');
 
 	% If name is set, export
-	if (exist('name') == 1) 
+	if (name ~= 0) 
 		plot.save_fig(f, name); 
 	end
 
 	% pause and close
-	if (exist('auto') == 0) pause(); end
+	if (auto == 0) pause(); end
 	close();
 end

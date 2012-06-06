@@ -1,4 +1,4 @@
-function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu] = sample(mrf, start_sample, B, sigma, max_iter, psnr_fun, border)
+function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu burn_iter] = sample(mrf, start_sample, B, sigma, max_burn, max_iter, psnr_fun, border)
 
 	% Initialize statistics
 	psnr					= []; %zeros(1, max_iter);
@@ -22,6 +22,13 @@ function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu] =
 
 	% Now loop through the gibbs sampling
 	while (sum(iterations) + sum(iterations_mu)) < max_iter
+
+		% Check if we are done burning in which case the running average is reset
+		if (sum(iterations) + sum(iterations_mu) > max_burn) 
+			k 								= 1; 
+			burn_iter						= [sum(iterations) sum(iterations_mu)];
+			max_burn						= 9999999999999; % Something big
+		end
 
 		k
 		
@@ -57,7 +64,7 @@ function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu] =
 		% For following along
 		sum_iter						= sum(iterations) + sum(iterations_mu)
 
-		% Update i
+		% Update k
 		k						= k + 1;
 
 	end

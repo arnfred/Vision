@@ -14,7 +14,7 @@
 % Solve system of: (B' * diagonal * B + P' * R * P) * u = rhs
 %
 % c is the solution, k is the amount of iterations, and res is the distance
-function [c,k,res] = cg(X, R, b, epsilon)
+function [c,k,res,psnr] = cg(X, R, b, epsilon, psnr_fun)
 
 
 	% The values used in the normal evaluation
@@ -26,6 +26,7 @@ function [c,k,res] = cg(X, R, b, epsilon)
 	nb 		= norm(b,'fro');                        % |b|
 	B		= matDiag(ones(size(b)));
 	res 	= zeros(kmax+1,1);
+	psnr	= [];
 
 
 	% Prepare fast function for matrix multiplication
@@ -47,9 +48,15 @@ function [c,k,res] = cg(X, R, b, epsilon)
 		if sqrt(res(k+1))<tol*nb
 			break
 		end
+
+		% Get signal to noise
+		psnr = [psnr psnr_fun(c)];
 	end
+
+	% Get signal to noise one final time (so we have exactly as many as iterations)
+	psnr = [psnr psnr_fun(c)];
   
-	res = sqrt(res(1:k+1));
+	res = sqrt(res(1:k+1))/nb;
 
 	function v = mvmA(X,R,B,P, w)             % MVM with A where A = X'*R*X + B'*P*B
 		Xw = X*w; 
