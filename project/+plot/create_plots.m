@@ -49,6 +49,9 @@ function [] = create_plots()
 	plot.multi_plot(psnr4, iter4, burn4, [0.0001 0.001 0.01 0.1], 'Tolerance', [1 5000 24 26], fliplr(1:4), [folder 'tolerance_overview'], 'auto');
 	plot.multi_plot(psnr4, iter4, burn4, [0.0001 0.001 0.01 0.1], 'Tolerance', [1 5000 24 26], (1:4), [folder 'tolerance_flipped'], 'auto');
 
+	% Get data and make plot for tolerance
+	[psnr6 u6 res6 iter6 burn6] = load_data_tolerance('mu',0.05);
+	plot.multi_plot(psnr6, iter6, burn6, [0.0001 0.001 0.01 0.1], 'Tolerance', [1 5000 28 30.5], fliplr(1:4), [folder 'tolerance_low_sigma'], 'auto');
 
 	% Present the full scaling data (this takes a while to load)
 	[psnr5 u5 res5 iter5 burn5] = load_data_scaling('mu',0,0.1);

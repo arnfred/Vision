@@ -14,13 +14,15 @@
 % Solve system of: (B' * diagonal * B + P' * R * P) * u = rhs
 %
 % c is the solution, k is the amount of iterations, and res is the distance
-function [c,k,res,psnr] = cg(X, R, b, epsilon, psnr_fun)
+function [c,k,res,psnr] = cg(X, R, b, epsilon, psnr_fun, tolerance)
 
+	% Set tolerance if not specified
+	if (nargin < 6) tolerance = 10e-3; end
 
 	% The values used in the normal evaluation
 	kmax	= 500;
 	c		= zeros(size(b));
-	tol		= 1e-3;
+	tol		= tolerance;
 
 	% Setting up variables
 	nb 		= norm(b,'fro');                        % |b|
