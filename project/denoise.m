@@ -1,6 +1,6 @@
 % Denoise function using gibbs sampling
 
-function [u u_mu i i_mu burn p p_mu r r_mu] = denoise(sigma, scaling, remove_scales, max_burn, iter)
+function [u u_mu i i_mu burn p p_mu r r_mu] = denoise(sigma, scaling, remove_scales, max_burn, iter, tolerance)
 
 	% Set variables
 	if (nargin < 1)	sigma				= 10; end
@@ -34,7 +34,7 @@ function [u u_mu i i_mu burn p p_mu r r_mu] = denoise(sigma, scaling, remove_sca
 	B									= gibbs.get_B(mrf);
 
 	% Run the gibbs for a while to burn in
-	[u u_mu i i_mu p p_mu r r_mu burn]	= gibbs.sample(mrf, u, B, sigma, max_burn, max_iter, psnr_fun, border);
+	[u u_mu i i_mu p p_mu r r_mu burn]	= gibbs.sample(mrf, u, B, sigma, max_burn, max_iter, psnr_fun, border, tolerance);
 
 	% Now run the sampling to collect the denoised image
 	% [u_s u_mu_s i_s i_mu_s p_s p_mu_s r_s r_mu_s]	= gibbs.sample(mrf, u_b(:,end), B, sigma, max_iter, psnr_fun, border);

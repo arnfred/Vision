@@ -1,8 +1,9 @@
-function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name, auto)
+function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, order, name, auto)
 
 	% Set some sane defaults
-	if (nargin < 8) auto = 0; end
-	if (nargin < 7) name = 0; end
+	if (nargin < 9) auto = 0; end
+	if (nargin < 8) name = 0; end
+	if (nargin < 7) order = [1 2 3 4]; end
 	if (nargin < 6) range = [1 5000 16 32]; end
 	
 	% Get new figure
@@ -10,8 +11,7 @@ function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name
 	hold on
 
 	% Some variables
-	sigma			= [0.05 0.1 0.15];
-	elements		= numel(variable);
+	elements		= min(numel(order), numel(variable));
 	colors_area		= [.95 .99 .99; .99 .95 .99; .99 .99 .95; .95 .99 .95];
 	colors_line		= [.005 .7 .7; .7 .005 .7; .7 .7 .005; .005 .7 .005];
 	color_burn		= [.5 .005 .005 ];
@@ -31,8 +31,9 @@ function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name
 	max_h		= top + padding;
 	min_h		= bottom;
 
-	% For each sigma, set data
-	for k = 1:elements
+	% For each element, set data
+	for j = 1:elements
+		k = order(j);
 
 		% Get the accumulative sum of iters
 		iter_sum	= [1 cumsum(iter{k})];
@@ -49,7 +50,7 @@ function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name
 		% Get saturated area color
 		H = area([0 0], [0 0]);
 		set(H,'FaceColor',c.^6,'EdgeColor',c.^6)
-		areas(k) = H;
+		areas(j) = H;
 
 		% For each other second iter, paint a white box
 		for i = 2:2:(numel(iter{k}))
@@ -66,8 +67,11 @@ function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name
 		axis(range)
 
 		% Plot the burn-in cutoff
-		psnr{elements + 1}(burn_iter{3}) = min_h;
-		line([burn_iter{k} burn_iter{k}], [psnr{k+1}(burn_iter{k}) psnr{k}(burn_iter{k})], 'Color', color_burn);
+		order(elements + 1) = elements + 1;					% to make the last line go down to the bottom
+		psnr{elements + 1}(burn_iter{elements}) = min_h;	% Ditto
+		linex = [burn_iter{k} burn_iter{k}];
+		liney = [psnr{order(j+1)}(burn_iter{k}) psnr{k}(burn_iter{k})];
+		line(linex, liney, 'LineWidth', 2, 'Color', color_burn);
 
 	end
 
@@ -85,8 +89,8 @@ function [f] = multi_plot(psnr, iter, burn_iter, variable, var_name, range, name
 	ylabel('psnr');
 
 	legend_text = {};
-	for i = 1:elements
-		legend_text{i} = [var_name, ' = ', num2str(variable(i))];
+	for k = 1:elements
+		legend_text{k} = [var_name, ' = ', num2str(variable(order(k)))];
 	end
 
 	% Set legend

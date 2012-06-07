@@ -1,4 +1,4 @@
-function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu burn_iter] = sample(mrf, start_sample, B, sigma, max_burn, max_iter, psnr_fun, border)
+function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu burn_iter] = sample(mrf, start_sample, B, sigma, max_burn, max_iter, psnr_fun, border, tolerance)
 
 	% Initialize statistics
 	psnr					= []; %zeros(1, max_iter);
@@ -40,7 +40,7 @@ function [samples samples_mu iterations iterations_mu psnr psnr_mu res res_mu bu
 		psnr_cg_mu						= @(u_cg_mu) psnr_fun((u_cg_mu + (k-1) * u_denoised_mu) / k);
 
 		% Then get u and u_mean
-		[u u_mu i i_mu p p_mu r r_mu]	= gibbs.sample_u(mrf, z, start_sample, B, sigma, psnr_cg, psnr_cg_mu);
+		[u u_mu i i_mu p p_mu r r_mu]	= gibbs.sample_u(mrf, z, start_sample, B, sigma, psnr_cg, psnr_cg_mu, tolerance);
 
 		% Calculate the denoised image as a moving average
 		u_denoised						= (u + (k-1)*u_denoised) / k;

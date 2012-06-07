@@ -33,7 +33,7 @@ echo ${PWD}
 
 # command to start your program/programs
 #let count=10
-/usr/local/bin/matlab -nosplash -nodesktop -logfile remoteAutocode.log -r "exp_denoise(par1, par2)"
+/usr/local/bin/matlab -nosplash -nodesktop -logfile remoteAutocode.log -r "exp_denoise(par1, par2, par3)"
 #./matlab_bash.sh "exp_denoise \"0.5, 0\""
 # /usr/local/bin/matlab --eval "do_denoise('constsize',par1,'fec',64,'channel','par2')" ;
 # while [ $? -ne 0 -a $count -gt 1 ]; do let count-=1; echo $count;  /usr/bin/octave --eval "BER('constsize',par1,'fec',64,'channel','par2')" ;  done
