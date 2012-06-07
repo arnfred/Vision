@@ -1,7 +1,5 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% LOG_GRAD_X - Evaluate gradient of log of GSM probability density.
+% See help for the base class density.
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -27,29 +25,40 @@
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
+% $Id: log_grad_x.m 240 2011-05-30 16:24:20Z uschmidt $
 
-function p = z_distribution(this, x)
+function g = log_grad_x(this, x)
   
   ndims   = this.ndims;
   nscales = this.nscales;
   ndata   = size(x, 2);
-
+  
   x_mu = bsxfun(@minus, x, this.mu);
+  
   if (iscell(this.precision))
     norm_const = zeros(nscales, 1);
     maha       = zeros(nscales, ndata);
     for j = 1:nscales
       norm_const(j) = sqrt(det(this.precision{j})) / ((2 * pi) ^ (ndims / 2));
       maha(j, :) = sum(x_mu .* (this.precision{j} * x_mu), 1);
+      P_x_mu{j} = this.precision{j} * x_mu;
     end
   else
     norm_const = sqrt(det(this.precision)) / ((2 * pi) ^ (ndims / 2));
     maha = sum(x_mu .* (this.precision * x_mu), 1);
+    P_x_mu = this.precision * x_mu;
   end
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
+  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ... 
       exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
+  y = bsxfun(@rdivide, y, sum(y, 1));
   
+  g = zeros(ndims, ndata);
+  for s = 1:nscales
+    if (iscell(P_x_mu))
+      g = g - this.scales(s) * bsxfun(@times, P_x_mu{s}, y(s, :));
+    else
+      g = g - this.scales(s) * bsxfun(@times, P_x_mu, y(s, :));
+    end
+  end
 end

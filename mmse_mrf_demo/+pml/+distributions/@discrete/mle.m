@@ -1,7 +1,6 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% MLE - Maximum likelihood estimation of discrete distribution
+% |THIS = MLE(THIS, X)| estimates the weights of the discrete distribution
+% THIS from data X.
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -27,29 +26,25 @@
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
-
-function p = z_distribution(this, x)
+% $Id: mle.m 240 2011-05-30 16:24:20Z uschmidt $
+    
+function this = mle(this, X)
+  ndims = size(X, 1);
+  if ndims > 1, error('NDIMS > 1 not supported.'), end
   
-  ndims   = this.ndims;
-  nscales = this.nscales;
-  ndata   = size(x, 2);
-
-  x_mu = bsxfun(@minus, x, this.mu);
-  if (iscell(this.precision))
-    norm_const = zeros(nscales, 1);
-    maha       = zeros(nscales, ndata);
-    for j = 1:nscales
-      norm_const(j) = sqrt(det(this.precision{j})) / ((2 * pi) ^ (ndims / 2));
-      maha(j, :) = sum(x_mu .* (this.precision{j} * x_mu), 1);
-    end
-  else
-    norm_const = sqrt(det(this.precision)) / ((2 * pi) ^ (ndims / 2));
-    maha = sum(x_mu .* (this.precision * x_mu), 1);
+  %% Set up indices
+  ind = cell(1, ndims);
+  for i = 1:ndims
+    m = max(max(X(i, :)), this.domain_start(i) + (size(this.weights, i) - 1) * this.domain_stride(i));
+    ind{i} = [-Inf (this.domain_start(i) + 0.5 * this.domain_stride(i)):this.domain_stride(i):(m - 0.5 * this.domain_stride(i)) Inf];
   end
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
-      exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
+  %% Simply estimate the relative frequency of each bin
+  w = histc(X', ind{:});
   
+  %% Remove the last histogram bin corresponding to Inf
+  for i = 1:ndims
+    ind{i} = 1:(size(w, i) - 1);
+  end
+  this.weights = w(ind{:});
 end

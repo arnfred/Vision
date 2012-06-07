@@ -1,7 +1,7 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% EM - EM estimation of mixture weights for GSM density
+% |THIS = EM(THIS, X, [NITERS])| estimates the weights of the GSM density
+% THIS from data X using the expectation maximization (EM) algorithm. NITERS
+% determines the number of iterations and is set to 10 if omitted.
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -27,14 +27,19 @@
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
-
-function p = z_distribution(this, x)
+% $Id: em.m 240 2011-05-30 16:24:20Z uschmidt $
+  
+function this = em(this, x, niters)
+  
+  
+  if (nargin < 3)
+    niters = 10;
+  end
   
   ndims   = this.ndims;
   nscales = this.nscales;
   ndata   = size(x, 2);
-
+  
   x_mu = bsxfun(@minus, x, this.mu);
   if (iscell(this.precision))
     norm_const = zeros(nscales, 1);
@@ -45,11 +50,19 @@ function p = z_distribution(this, x)
     end
   else
     norm_const = sqrt(det(this.precision)) / ((2 * pi) ^ (ndims / 2));
-    maha = sum(x_mu .* (this.precision * x_mu), 1);
+    maha = repmat(sum(x_mu .* (this.precision * x_mu), 1), nscales, 1);
   end
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
-      exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
-  
+  for i = 1:niters
+    y = repmat(norm_const .* this.weights(:) .* this.scales(:) .^ (ndims/2), 1, ndata) .* ... 
+        exp(-0.5 * repmat(this.scales(:), 1, ndata) .* maha);
+    
+    invld = (sum(y, 1) <= 0);
+    y(:, find(invld)) = 1;
+    
+    gamma = y ./ repmat(sum(y, 1), nscales, 1);
+    
+    this.weights = mean(gamma, 2)';
+    % this.weights
+  end
 end

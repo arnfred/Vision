@@ -1,0 +1,140 @@
+\documentclass{article}
+\usepackage{verbatim}
+\usepackage{url}
+\usepackage{breqn}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\begin{document}
+
+\title{Efficient Gibbs Sampling for Fields of Experts Image Models}
+
+\author{Jonas Arnfred \\ \email{jonas.arnfred@epfl.ch}}
+
+\maketitle
+
+\section{Introduction}
+
+\section{Method}
+
+% This is about HOW I did stuff
+
+% What do I want to write about?  First introduce the probabilistic Model, then
+% shortly go over how the gibbs sampling works
+
+% Now go into depth with the systems I need to solve to denoise an image 
+
+% Now introduce the differences from DARMSTADT and specify on what points my
+% solution is different from theirs (Don't talk about why)
+
+% Related to differences, talk about using cg instead of cholesky
+% decomposition, about using number of conjugate gradients iterations to
+% measure out the burn-in time. About how I'm only sampling from one image and
+% not 4 per iteration. About how I'm stopping the process after a fixed number
+% of iterations too.  Also talk about the burn-in samples are discarded and
+% that the average of the samples that follow is the basis for the image
+
+% Now talk about the experiments: How was the data collected?
+% Talk about exclusions of scales
+% Talk about variations or scalings of scales
+% Talk about variations in CG cut-off rate (tolerance)
+% Mention that the data is for one image only, and not averaged
+
+% Show plot of 5 images with different sigma noise
+
+\section{Results}
+
+% This is about WHAT the stuff I did turned out to look like
+
+% Introduce the plot of the sigma variations and make sure to explain the
+% features of the plot. Explain the shading, the burn-in line, explain that
+% even during burn-in, the psnr is of the average so far. Then analyse the
+% data:
+% 
+% Figure 1
+% - Note that this reflects a simple implementation of cg but with all original
+%   (being from DARMSTADT) parameters unchanged.
+% - Note how the the psnr as the average is lowered when it is reset to exclude
+%   the first samples
+% - Note very clearly that I'm showing iterations from the process of finding
+%   the u_mu ONLY.
+
+% Figure 2
+% Now introduce the plot of the zoom, specifying the sigma it was taken at.
+% - Note how the cg decays exponentially, and how there isn't much improvement
+%   in psnr to be seen after the norm is smaller than 1.
+% - Explain that this is a general example, and that it can been seen from figure1
+% - Note how the psnr is at maximum early in the cg
+
+% Figure 3 and 4
+% Introduce the two figures with variation of tolerance to follow up on the last data
+% - Mention the change in Y-axis.
+% - Note how this data confirms that there isn't a big punishment for stopping cg early
+% - Note also that there isn't much improvement either for higher noise levels
+
+% Figure 5 Introduce the removal scales figure
+% - Note how the original unremoved scales is higher than the rest during most
+%   of the denoising process
+% - Note how the data for removed scales shows that simulations hit a psnr
+%   ceiling much faster when the scales are removed
+
+% Figure 6 and 7 The scaled scales figure and heatmap
+% - Introduce the data (how the figure 6 shows a smaller subset of figure 7)
+% - Introduce the heatmap and explain that for each 100 iterations it shows the
+%   maximum psnr value
+% - Note how the pattern is similar to figure 5
+% - Note how the spikes created close to the burn-in shows up around 1500 iterations
+
+% Figure 
+
+\section{Discussion}
+
+% Talk about how the removal of scales and the rescaling of scales only applies
+% to a limited situation, since the probabilistic model is trained with these
+% specific scales in mind, so it's not impossible that a different model with
+% fewer scales or smaller scales would fare better.
+
+% Talk about how the fact that this data is based on a single image makes it
+% volatile to changes. Talk about how the fixed burn-in rate might or might not
+% be optimal.
+
+% Discuss how the scaling is not doing anything constructive. We might get
+% faster cg, which gives faster gibbs sampling steps, but in return it takes
+% more steps for the gibbs sampling to reach the same psnr level, if possible
+% at all
+
+% Similarly with regards to removal of scales, it doesn't get us anywhere.
+
+% In case we are willing to pay a bit in terms of optimal psnr it might however
+% be interesting to change the tolerance of the cg. Here we can gain a steeper
+% rate of psnr increase per iteration by being less strict about how precise we
+% expect the end result of the cg, however this gain comes at a cost of lower
+% optimal psnr, especially at higher noise rates
+
+% It might make sense to look more deeply into the relationships between 
+% conjugate gradients. I'll add a a plot
+
+\section{Conclusion}
+
+Write about how MRF isn't as useful if it's not fast, and how I've 
+showed that to speed it up, we'll can't do anything without relearning 
+the model when it comes to the scales. However we can change the 
+conjugate gradients which for low noise can improve things quite a 
+bunch.
+
+% \input{introduction.tex}
+
+% \input{method.tex}
+
+% \input{results-discussion.tex}
+
+% \input{conclusion.tex}
+
+%\bibliographystyle{abbrv}
+%\bibliography{bibliography}  
+
+% \input{appendix.tex}
+
+% \balancecolumns
+\end{document}

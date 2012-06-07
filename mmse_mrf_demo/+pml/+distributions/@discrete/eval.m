@@ -1,7 +1,7 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% EVAL - Evaluate, i.e. compute, the discrete distribution
+% |P = EVAL(THIS, X)| evaluates the discrete probability P of the
+% distribution THIS at one or more points X. X is either a row vector or a
+% matrix of row vectors (in case of multiple points).
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -27,29 +27,15 @@
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
-
-function p = z_distribution(this, x)
+% $Id: eval.m 240 2011-05-30 16:24:20Z uschmidt $
+    
+function p = eval(this, x)
+  tmp = bsxfun(@minus, x, this.domain_start(:));
+  idx = 1 + round(bsxfun(@rdivide, tmp, this.domain_stride(:)));
   
-  ndims   = this.ndims;
-  nscales = this.nscales;
-  ndata   = size(x, 2);
-
-  x_mu = bsxfun(@minus, x, this.mu);
-  if (iscell(this.precision))
-    norm_const = zeros(nscales, 1);
-    maha       = zeros(nscales, ndata);
-    for j = 1:nscales
-      norm_const(j) = sqrt(det(this.precision{j})) / ((2 * pi) ^ (ndims / 2));
-      maha(j, :) = sum(x_mu .* (this.precision{j} * x_mu), 1);
-    end
-  else
-    norm_const = sqrt(det(this.precision)) / ((2 * pi) ^ (ndims / 2));
-    maha = sum(x_mu .* (this.precision * x_mu), 1);
-  end
+  ndims = size(x, 1);
+  dims = mat2cell(idx, ones(1, ndims), size(x, 2));
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
-      exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
-  
+  p = this.weights(sub2ind(size(this.weights), dims{:}));
+  p = p(:)';
 end

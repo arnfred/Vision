@@ -1,7 +1,5 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% LOG_GRAD_X - Evaluate gradient of log of FoE
+% See help for the base class density.
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -22,34 +20,38 @@
 % redistributed without permission from the authors.
 %
 %  Author:  Stefan Roth, Department of Computer Science, TU Darmstadt
-%  Contact: sroth@cs.tu-darmstadt.de
+%           Uwe Schmidt, Department of Computer Science, TU Darmstadt
+%  Contact: sroth@cs.tu-darmstadt.de, uwe.schmidt@gris.tu-darmstadt.de
 % 
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
+% $Id: log_grad_x.m 240 2011-05-30 16:24:20Z uschmidt $
 
-function p = z_distribution(this, x)
+function g = log_grad_x(this, x)
+
+  npixels  = size(x, 1);
+  nimages  = size(x, 2);
   
-  ndims   = this.ndims;
-  nscales = this.nscales;
-  ndata   = size(x, 2);
-
-  x_mu = bsxfun(@minus, x, this.mu);
-  if (iscell(this.precision))
-    norm_const = zeros(nscales, 1);
-    maha       = zeros(nscales, ndata);
-    for j = 1:nscales
-      norm_const(j) = sqrt(det(this.precision{j})) / ((2 * pi) ^ (ndims / 2));
-      maha(j, :) = sum(x_mu .* (this.precision{j} * x_mu), 1);
-    end
-  else
-    norm_const = sqrt(det(this.precision)) / ((2 * pi) ^ (ndims / 2));
-    maha = sum(x_mu .* (this.precision * x_mu), 1);
+  g = zeros(npixels, nimages);
+  for i = 1:nimages
+    % Convert column images into 2D
+    img = reshape(x(:, i), this.imdims);
+    
+    g(:, i) = -reshape(foe_grad(this, img), npixels, 1) - this.epsilon * x(:, i);
   end
+end
+
+
+function g = foe_grad(this, X)
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
-      exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
+  nfilters = this.nfilters;
+  nexperts = this.nexperts;
+  g = 0;
   
+  for i = 1:nfilters
+    d_filter = this.conv2(X, this.filter(i));
+    d_filter_grad = reshape(-this.experts{min(i,nexperts)}.log_grad_x(d_filter(:)'), size(d_filter));
+    g = g + this.imfilter(d_filter_grad, this.filter(i));
+  end
 end

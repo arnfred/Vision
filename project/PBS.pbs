@@ -1,0 +1,41 @@
+#email address where the mail messages must be sent
+#PBS -M jonas.arnfred@epfl.ch
+#instruct the PBS to send a mail when the job: (b) start (e) finish
+#PBS -m be
+#Output and Error streams are redirected to a single stream (output file)
+#PBS -j oe
+
+#Name of the job
+#PBS -N jobname
+
+#the job must run for ... hours. if you don't specify this parameter
+#the job will be stopped after 1 hour
+#PBS -l cput=10:00:00
+#
+#Set Queue name
+#PBS -q default
+
+#the job need this amount of memory (uncomment to activate)
+#PBS -l mem=1024mb
+
+#PBS -l nodes=1:bit64:matlab
+## With octave, there is no way to distinguish 32 and 64 bit mexfiles, since
+## they have the same extension (.mex), so recompilation must be avoided, and
+## make sure that we run the scripts only on machines with the proper architecture
+## for which the mexfiles have been precompiled (use flags bit32 or bit64 for qsub)
+
+echo "Process running on: " $(hostname)
+echo "Time is:            " $(date)
+
+#cd to the directory where your script is stored
+cd $PBS_O_WORKDIR
+echo ${PWD}
+
+# command to start your program/programs
+#let count=10
+/usr/local/bin/matlab -nosplash -nodesktop -logfile remoteAutocode.log -r "exp_denoise(par1, par2, par3)"
+#./matlab_bash.sh "exp_denoise \"0.5, 0\""
+# /usr/local/bin/matlab --eval "do_denoise('constsize',par1,'fec',64,'channel','par2')" ;
+# while [ $? -ne 0 -a $count -gt 1 ]; do let count-=1; echo $count;  /usr/bin/octave --eval "BER('constsize',par1,'fec',64,'channel','par2')" ;  done
+
+

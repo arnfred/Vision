@@ -1,7 +1,5 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% SAMPLE - Sample from a GSM probability density
+% See help for the base class density.
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -27,29 +25,35 @@
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
+% $Id: sample.m 240 2011-05-30 16:24:20Z uschmidt $
 
-function p = z_distribution(this, x)
+function y = sample(this, nsamples)
   
-  ndims   = this.ndims;
-  nscales = this.nscales;
-  ndata   = size(x, 2);
-
-  x_mu = bsxfun(@minus, x, this.mu);
+  
+  ndims   = length(this.mean);
+  nscales = length(this.weights);
+  
+  this.weights = this.weights(end:-1:1);
+  
+  cw = cumsum(this.weights);
+  mix_comp = sum(repmat(rand(1, nsamples), nscales, 1) <= ...
+                 repmat(cw(:), 1, nsamples), 1);
+  
+  % Whitening transform of precision
+  
   if (iscell(this.precision))
-    norm_const = zeros(nscales, 1);
-    maha       = zeros(nscales, ndata);
+    tmp = zeros(ndims, nsamples);
+    r   = randn(ndims, nsamples);
     for j = 1:nscales
-      norm_const(j) = sqrt(det(this.precision{j})) / ((2 * pi) ^ (ndims / 2));
-      maha(j, :) = sum(x_mu .* (this.precision{j} * x_mu), 1);
+      tmp2 = chol(this.precision{j}) \ r;
+      idx = repmat(mix_comp == j, ndims, 1);
+      tmp(idx) = tmp2(idx);
     end
   else
-    norm_const = sqrt(det(this.precision)) / ((2 * pi) ^ (ndims / 2));
-    maha = sum(x_mu .* (this.precision * x_mu), 1);
+    tmp = chol(this.precision) \ randn(ndims, nsamples);
   end
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
-      exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
-  
+  y = repmat(this.mean, 1, nsamples) + tmp ./ ...
+      repmat(sqrt(this.scales(mix_comp)), ndims, 1);
 end
+  

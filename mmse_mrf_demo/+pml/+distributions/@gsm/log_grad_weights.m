@@ -1,7 +1,4 @@
-%% Z_DISTRIBUTION - Distribution over scale mixture components Z, given X
-% |P = Z_DISTRIBUTION(THIS, X)| computes a discrete distribution over scales Z
-% for every X. P is a matrix of size [nscales x ndata], where every column
-% contains normalized weights.
+%% LOG_GRAD_WEIGHTS - Evaluate gradient of GSM log-density w.r.t weights
 % 
 % This file is part of the implementation as described in the papers:
 % 
@@ -27,14 +24,14 @@
 % Project page:  http://www.gris.tu-darmstadt.de/research/visinf/software/index.en.htm
 
 % Copyright 2009-2011 TU Darmstadt, Darmstadt, Germany.
-% $Id: z_distribution.m 240 2011-05-30 16:24:20Z uschmidt $
+% $Id: log_grad_weights.m 240 2011-05-30 16:24:20Z uschmidt $
 
-function p = z_distribution(this, x)
+function g = log_grad_weights(this, x)
   
   ndims   = this.ndims;
   nscales = this.nscales;
   ndata   = size(x, 2);
-
+  
   x_mu = bsxfun(@minus, x, this.mu);
   if (iscell(this.precision))
     norm_const = zeros(nscales, 1);
@@ -48,8 +45,15 @@ function p = z_distribution(this, x)
     maha = sum(x_mu .* (this.precision * x_mu), 1);
   end
   
-  y = bsxfun(@times, norm_const .* this.weights(:) .* (this.scales(:) .^ (ndims/2)), ...
+  y = bsxfun(@times, norm_const .* (this.scales(:) .^ (ndims/2)), ... 
       exp(bsxfun(@times, -0.5 * this.scales(:), maha)));
-  p = bsxfun(@rdivide, y , sum(y, 1));
+  
+  invld = (sum(y, 1) <= 0);
+  y(:, find(invld)) = [];
+  
+  gamma = bsxfun(@rdivide, y, sum(bsxfun(@times, this.weights(:), y), 1));
+    
+  g = sum(gamma, 2) - ndata;
+  g = reshape(g, size(this.weights));
   
 end
