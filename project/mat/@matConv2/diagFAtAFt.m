@@ -5,7 +5,8 @@
 function d = diagFAtAFt(A,opt)
 
   if strcmp(A.shape,'circ') || (nargin>1 && strcmp(opt,'cheap'))
-    d = abs(A.F); d = fftshift(d.*d);
+    d = abs(A.F);
+    d = fftshift(d.*d);
   else
     sz = size(A.F);
     F  = matFFTNmask(ones(sz));

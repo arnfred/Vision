@@ -4,6 +4,7 @@
 
 function d = diagFAtAFt(A,opt)
 
+  disp('here')
   if nargin<2, opt=[]; end
   d = [];
   if strcmp(type(A),'vcat')

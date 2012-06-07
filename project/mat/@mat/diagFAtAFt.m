@@ -3,7 +3,6 @@
 % (c) by Hannes Nickisch, MPI for Biological Cybernetics, 2011 October 20
 
 function d = diagFAtAFt(A,opt)
-
   if nargin<2, opt=[]; end
   d = [];
   if strcmp(type(A),'vcat')
@@ -13,8 +12,8 @@ function d = diagFAtAFt(A,opt)
       di = diagFAtAFt(arg{i},opt);
       if numel(di)>0
         d = d + di;
-      else
-        d = []; return
+      % else
+      %   d = []; return
       end
     end
   elseif strcmp(type(A),'scale')
