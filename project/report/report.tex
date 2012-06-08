@@ -17,19 +17,48 @@
 
 \section{Introduction}
 
+For most machine learning algorithms there are two main criteria for the 
+success of new improvements: The quality and the efficiency of the 
+algorithm. An algorithm with a high quality output will push the 
+boundaries of what's possible, but if it isn't fast the applications to 
+real life situations become drastically limited. Most people do not have 
+days to wait for a simulation to be done, nor do they have a cluster of 
+nodes to run the algorithm on, but what's more, many applications 
+benefit from a close to real-time output or work with input sizes 
+drastically larger than the test examples used to demonstrate the 
+algorithms.
+
+The Field of Experts framework proposed in \citep{stefan} attempts to 
+address both sides of the problem by simplifying export models to use 
+convolution filters making it feasible to sample images from a 
+generative framework. The particular denoising algorithm proposed in 
+\citep{uwe} makes use of these advantages to a large part, but in 
+efforts to prove the worth of the Fields of Experts algorithm in terms 
+of quality, they sacrifice efficiency to achieve the best possible 
+result. This leaves it an open question whether Fields of Experts has 
+the potential to reach a good compromise between speed and quality.
+
+In this paper I try to explore how much we need to sacrifice in terms of 
+quality in order to gain extra efficiency. Due to the limited scope of 
+my project, this exploration is done entirely within the frame of an 
+already learned image prior taken from \citep{uwe}. In the first part of 
+my paper I analyse the main efficiency bottleneck of the algorithm and 
+discuss what variables I can adjust in the hopes of seeing an increase 
+in speed. In the second part I address this discussion and provide data 
+for the behaviour of Field of Experts given adjustments of these 
+variables.
+
+Due to the exploratory nature of the project, I present this data not as 
+a final conclusive material on the matter, but more as an indicator of 
+the directions it might be worthwhile to look in to down the road.
+
 \section{Method}
 
-% This is about HOW I did stuff
-% \subsection{Sampling from the posterior}
-
-% Cite matthias somewhere
-
-To analyse the performance of conjugate gradient on the FoE framework, I 
-have implemented a denoise algorithm which uses FOE as an image prior.  
-Instead of learning the model parameters myself, I have used the filters 
-learned on natural images in \citep{uwe}. Given an image $\textbf{u} \in 
-\mathbb{R}^n$, the FoE framework defines the probability density of an 
-image \textbf{u} as:
+To analyse where the performance bottleneck is located in the Field of 
+Experts, we need to take a look at how the prior is defined. In
+\citep{stefan} and \citep{uwe} the framework is defined as follows: 
+Given an image of size $n_x n_y = n$, $\textbf{u} \in \mathbb{R}^n$, the 
+probability density of an image \textbf{u} is:
 
 \begin{equation}
 	p(\textbf{u}; \Theta) = 
@@ -40,7 +69,7 @@ image \textbf{u} as:
 where $s_{ri}$ is the circular convolution of $u$ with the filter $f_r$, 
 $r = 1, \ldots , R$, $\,\Theta$ is a collection of model parameters 
 ($f_r, \alpha_r$, $\sigma_r$) and $Z$ is the partition function.  The 
-potentials $t_r(s)$ used are mixtures of gaussians defined as:
+potentials $t_r(s)$ used are mixtures of Gaussian defined as:
 
 \begin{equation}
 	t_r(s) = \sum_{j=1}^{J} \alpha_{rj}\mathcal{N}(s|o, \sigma^2_{rj})
@@ -101,10 +130,10 @@ The denoise algorithm proposed by \citep{uwe} uses choleski
 decomposition to solve the systems which doesn't scale well to images 
 and doesn't provide much room for optimizations. The first step of 
 speeding up the algorithm was thus to implement a Gibbs sampler that 
-uses conjugate gradient. This allowed for several possible ways to 
-increase the speed of the algorithm: Preconditioning, lower error 
-tolerance, resizing of the scales ($\sigma^2_{rz_{ri}}$) and finally 
-eliminating the more extreme values of the scales.
+uses the conjugate gradient algorithm. This allowed for several possible 
+ways to increase the speed of the algorithm: Preconditioning, lower 
+error tolerance, resizing of the scales ($\sigma^2_{rz_{ri}}$) and 
+finally eliminating the more extreme values of the scales.
 
 Since the goal of the implemented denoising algorithm is not to achieve 
 superior denoising results, but rather serve as a tool for analysis, it 
@@ -126,7 +155,7 @@ invertible and in fact improves the condition number.
 
 Alternatively (and much easier) we can increase how small the error must 
 be before we stop iterating. This in turn means that we are accepting 
-solutions that are futher from the true solution of the system which 
+solutions that are further from the true solution of the system which 
 might negatively impact the quality of the denoising.
 
 Instead of looking at the algorithm, it might prove useful to change 
@@ -208,34 +237,137 @@ that the more extreme scales are altered more than those in between.
 
 To test how the aforementioned adjustments affect the performance of the 
 denoising algorithm I calculate the signal to noise ratio (PSNR) for 
-each iteration of conjugate gradient. In order to evaluate what 
-different levels of signal to noise ratio translates to in image 
-quality, figure \ref{img_examples} showcases some examples for values 
-typically encountered during the experiments. To compare the signal to 
-noise ratio of an imaged with added gaussian noise at a variance of 
-0.05, 0.1 or 0.15  (for an image defined on [0,1]) is respectively 
-$26.3, \, 20.0$ and $16.5$ approximately. 
+each iteration of conjugate gradient. All the data shown has been 
+collected for three different values of sigma (0.05, 0.1 and 0.15) in 
+relation to the images defined on [0,1]. Most figures show only data for 
+one value of sigma except for cases where there are remarkable 
+differences in behaviour. For every iteration of the Gibbs sampler we 
+are solving two linear systems, but since they aren't synchronized it 
+would be confusing to show both in the same plot. For considerations of 
+consistency only the iterations of the system solving for 
+$\textbf{u}_{\mu}$ will be shown in the figures, except for cases where 
+differences in behaviors between the two systems warrant a special 
+mention. $\textbf{u}_{\mu}$ was chosen because the Rao-Blackwellised 
+Gibbs sampling samples the denoised image exclusively from 
+$\textbf{u}_{\mu}$.
+
+In order to evaluate what different levels of signal to noise ratio 
+translates to in image quality, figure \ref{img_examples} showcases some 
+examples for values typically encountered during the experiments. To 
+compare the signal to noise ratio of an imaged with added gaussian noise 
+at a standard deviation of 0.05, 0.1 or 0.15  (for an image defined on 
+[0,1]) is respectively $26.3, \, 20.0$ and $16.5$ approximately. 
 
 \begin{figure}[h]
 	\makebox[\textwidth][c]{%
-		\begin{minipage}[t]{0.7\textwidth}
+		\begin{minipage}[t]{0.75\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{img/sigma_overview}
 			\caption{Variation of Sigma}
 			\label{fig:normal}
 		\end{minipage}%
 		\qquad
-		\begin{minipage}[t]{0.7\textwidth}
+		\begin{minipage}[t]{0.75\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{img/normal_zoom}
-			\caption{Residual Error}
+			\caption{Four iterations for sigma of 0.05 together with  
+			the residual norm}
 			\label{fig:res_error}
 		\end{minipage}%
 	}%
 \end{figure}
 
+\begin{figure}[h!]
+	\makebox[\textwidth][c]{%
+		\begin{minipage}[t]{0.75\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{img/tolerance_overview}
+			\caption{Variation of Tolerance at sigma = 0.1}
+			\label{fig:tolerance}
+		\end{minipage}%
+		\qquad
+		\begin{minipage}[t]{0.75\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{img/tolerance_low_sigma}
+			\caption{Variation of Tolerance at sigma = 0.05}
+			\label{fig:tol_high_sigma}
+		\end{minipage}%
+	}%
+\end{figure}
+
+Figure \ref{fig:normal} shows a run with no modified parameters for the 
+same three values of sigma.  The area underneath each line has been 
+shaded in alternating colors to indicate the duration of each conjugate 
+gradient run. At the burn-off where the initial samples are discarded, 
+the plot is marked with a red vertical line. The burn-off happens when a 
+conjugate gradient run finishes and has surpassed a certain amount of 
+iterations. This explains why it doesn't happen at exactly the same 
+point. For all experiments the burn-off was set to happen after the 
+total sum (both systems of linear equations) of iterations had surpassed 
+3000. The run would be terminated after 10000 total iterations. This 
+means that $\textbf{u}_{\mu}$ has been calculated for around 5000 
+iterations. For all overview plots the x-axis goes from 1 to 5000 
+iterations. The y-axis on the other hand varies between plots. From the 
+plot we can observe how the values of $\sigma$ influence the signal to 
+noise ratio as well as the amount of iterations for each conjugate 
+gradient run. For $\sigma = 0.05$ the mean amount of iterations is 
+FILLME, while it is respectively FILLME and FILLME for $\sigma = 0.1$ 
+and $\sigma = 0.15$.
+
+If we take a closer look in figure \ref{fig:res_error} we can see how 
+each iteration of conjugate gradient starts out with a low signal to 
+noise ratio but quickly reaches a maximum before it settles. The 
+exponential decay of the norm of the residual is plotted on top of the 
+graph, showing that no real change in the signal to noise ratio takes 
+place after the norm of the residual passes below 0.1.
+
+The effects of lowering the tolerance can be seen in figure 
+\ref{fig:tolerance} and \ref{fig:tol_high_sigma}. For $\sigma = 0.1$ in 
+figure \ref{fig:tolerance} the higher tolerance improves the steepness 
+of the curve, but comes at a cost. Ultimately the signal to noise ratio 
+of the more exact cases with tolerance $= 0.001$ or $0.0001$ surpasses 
+the higher tolerances. For the smallest standard deviation ($\sigma = 
+0.05$) this isn't necessarily the case as the lower tolerances still 
+maintain a better FILLME (add percent) signal to noise ratio after 5000 
+iterations.
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.75\textwidth]{img/rem_scales_overview}
+		\caption{Removal of scales at sigma = 0.1}
+		\label{fig:rem_scales}
+\end{figure}%
 
 
+Figure \ref{fig:rem_scales} depicts effect of removing the more extreme 
+scales. As expected the conjugate gradient iterations become a lot 
+quicker, but it comes at the cost of decreased performance. A similar 
+behavior can be seen in figure \ref{fig:scaling}. Here the scales have 
+been removed two by two, greatly improving the speed of conjugate 
+gradient but at the cost of quality. The more scales removed, the 
+earlier the plots converge toward a constant value. In figure 
+\ref{fig:colormap_scales} a more detailed account of the same data can 
+be seen.  A grid is made by plotting the maximum signal to noise ratio 
+for each interval of a 100 iterations, as the scale factor is varied 
+from 1 to 0.1 in steps of 0.05.
+
+\begin{figure}[h]
+	\makebox[\textwidth][c]{%
+		\begin{minipage}[t]{0.75\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{img/scaling_overview}
+			\caption{Variation of Scales at sigma = 0.1}
+			\label{fig:scaling}
+		\end{minipage}%
+		\qquad
+		\begin{minipage}[t]{0.75\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{img/Scaling_heatmap}
+			\caption{Variation of Scales at sigma = 0.1}
+			\label{fig:colormap_scales}
+		\end{minipage}%
+	}%
+\end{figure}
 
 % This is about WHAT the stuff I did turned out to look like
 
@@ -282,55 +414,52 @@ $26.3, \, 20.0$ and $16.5$ approximately.
 
 \section{Discussion}
 
-% Talk about how the removal of scales and the rescaling of scales only applies
-% to a limited situation, since the probabilistic model is trained with these
-% specific scales in mind, so it's not impossible that a different model with
-% fewer scales or smaller scales would fare better.
+To interpret the results, it's important to keep in mind that while the 
+scales were hand picked, the model was learned and optimized for these 
+scales. This means that removing scales or changing them comes with the 
+added cost of running the model in an environment it hasn't been 
+optimized for. It might not be impossible to learn another model with 
+smaller scales that perform as well as the current even if the results 
+don't show greater rates for reduced scales.  Furthermore these results 
+are based on simulations run on a single image and as such prone to 
+fluctuations and issues that might not show up were more images 
+considered.
 
-% Talk about how the fact that this data is based on a single image makes it
-% volatile to changes. Talk about how the fixed burn-in rate might or might not
-% be optimal.
+In this light we can learn from the results based on modifying the 
+scales that the conjugate gradient algorithm does indeed converge faster 
+when the scales are less extreme, a useful lesson if we are to learn our 
+own scales later on.  
 
-% Discuss how the scaling is not doing anything constructive. We might get
-% faster cg, which gives faster gibbs sampling steps, but in return it takes
-% more steps for the gibbs sampling to reach the same psnr level, if possible
-% at all
+For applications where speed is more important than a few percents gain 
+in signal to noise ratio, adjusting the tolerance of the conjugate 
+gradient algorithm can prove useful. Higher tolerance rates have shown 
+to provide faster climbs but tend to come at the price of a lower global 
+maximum of signal to noise ratio. However for low noise applications the 
+costs associated with increasing the tolerance are reduced. The gains in 
+speed are relatively small though.
 
-% Similarly with regards to removal of scales, it doesn't get us anywhere.
+In \citep{uwe} a lot of weight is put on the fact that the prior 
+resembles the long tailed distributions seen in natural images. It would 
+be interesting to see if there is space for compromise between the 
+realistic but slow distributions and their fast but inaccurate 
+counterparts.
 
-% In case we are willing to pay a bit in terms of optimal psnr it might however
-% be interesting to change the tolerance of the cg. Here we can gain a steeper
-% rate of psnr increase per iteration by being less strict about how precise we
-% expect the end result of the cg, however this gain comes at a cost of lower
-% optimal psnr, especially at higher noise rates
 
-% It might make sense to look more deeply into the relationships between 
-% conjugate gradient. I'll add a a plot
-
+% Talk about
 \section{Conclusion}
 
-Write about how MRF isn't as useful if it's not fast, and how I've 
-showed that to speed it up, we'll can't do anything without relearning 
-the model when it comes to the scales. However we can change the 
-conjugate gradient which for low noise can improve things quite a bunch.
-
-% \input{introduction.tex}
-
-% \input{method.tex}
-
-% \input{results-discussion.tex}
-
-% \input{conclusion.tex}
-
-%\bibliographystyle{abbrv}
-%\bibliography{bibliography}  
-
-% \input{appendix.tex}
-
-% \balancecolumns
+In order to improve the efficiency of the Fields of Experts framework I 
+implemented a denoising algorithm using framework in combination with 
+the conjugate gradient algorithm. Based on this implementation I 
+demonstrated that adjusting the scales of the auxiliary variable Gibbs 
+sampler to create a prior with a smaller long tail does increase 
+conjugate gradient convergence, but doesn't improve overall performance.  
+Moreover, I showed that adjusting the tolerance of the conjugate 
+gradient algorithm can improve performance, especially for low 
+variances.
 
 % Bibliography
-\bibliographystyle{unsrtnat}
-\bibliography{yemen}
+\bibliographystyle{plain}
+\bibliography{report}
 
 \end{document}

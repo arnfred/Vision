@@ -1,0 +1,107 @@
+%    \begin{macrocode}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ifoddpage}[2011/09/13 v1.0 Conditionals for odd/even page detection]
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\newcount\c@checkoddpage
+%    \end{macrocode}
+%
+% \begin{macro}{\thecheckoddpage}
+%    \begin{macrocode}
+\def\thecheckoddpage{\number\c@checkoddpage}
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+\newif\ifoddpage
+\newif\ifoddpageoroneside
+\let\oddpage@checkpage\relax
+%    \end{macrocode}
+%
+% \begin{macro}{\oddpage@page}
+%    \begin{macrocode}
+\def\oddpage@page{1}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\oddpage@label}
+%    \begin{macrocode}
+\def\oddpage@label{%
+    \@newl@bel{checkoddpage}%
+}%
+\write\@auxout{\noexpand\providecommand\noexpand\oddpage@label[2]{}}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\oddpage@checkpage}
+%    \begin{macrocode}
+\def\oddpage@checkpage#1{%
+    \@bsphack
+    \write\@auxout{\string\oddpage@label{#1}{\the\c@page}}%
+    \@esphack
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\oddpage@page}
+%    \begin{macrocode}
+\def\oddpage@page{%
+    \expandafter\ifx\csname checkoddpage@\thecheckoddpage\endcsname\relax
+        \the\c@page
+    \else
+        \csname checkoddpage@\thecheckoddpage\endcsname
+    \fi
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\checkoddpage}
+%    \begin{macrocode}
+\DeclareRobustCommand\checkoddpage{%
+    \stepcounter{checkoddpage}%
+    \expandafter\oddpage@checkpage\expandafter{\number\c@checkoddpage}%
+    \ifodd\oddpage@page\relax
+        \oddpagetrue
+        \oddpageoronesidetrue
+    \else
+        \oddpagefalse
+        \oddpageoronesidefalse
+    \fi
+    \if@twoside\else
+        \oddpageoronesidetrue
+    \fi
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@ifoddpage}
+%    \begin{macrocode}
+\def\@ifoddpage{%
+    \ifoddside
+        \expandafter\@firstoftwo
+    \else
+        \expandafter\@secondoftwo
+    \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@ifoddpageoroneside}
+%    \begin{macrocode}
+\def\@ifoddpageoroneside{%
+    \iftwosideoddside
+        \expandafter\@firstoftwo
+    \else
+        \expandafter\@secondoftwo
+    \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
