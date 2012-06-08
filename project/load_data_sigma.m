@@ -1,6 +1,11 @@
 % Function for loading all sigma values for a certain scaling and rem_scales
 
-function [psnr_out u_out res_out iter_out burn_out] = load_data_sigma(type, scaling, rem_scales)
+function [psnr_out u_out res_out iter_out burn_out] = load_data_sigma(type, scaling, rem_scales, tolerance, with_prec)
+
+	if (nargin < 5) with_prec = '';
+	else			with_prec = ['_with_prec', num2str(with_prec)]; end
+	if (nargin < 4) tolerance = '';
+	else			tolerance = ['_tolerance_', num2str(tolerance)]; end
 
 	% Set boolean to 1 if we want to load the rao blackwellised data
 	if (type == 'rb' | type == 'mu' | type == 'mean') mu = 1;
@@ -22,7 +27,7 @@ function [psnr_out u_out res_out iter_out burn_out] = load_data_sigma(type, scal
 	for i = 1:numel(sigma)
 
 		% Now find a filename that fits
-		fname = ['data/exp_sigma_',num2str(sigma(i)),'_scaling_',num2str(scaling),'_rem_scales_',num2str(rem_scales),'_maxBurn_',num2str(max_burn), '_maxIter_', num2str(max_iter),'.mat'];
+		fname = ['data/exp_sigma_',num2str(sigma(i)),'_scaling_',num2str(scaling),'_rem_scales_',num2str(rem_scales),'_maxBurn_',num2str(max_burn), '_maxIter_', num2str(max_iter), tolerance, with_prec, '.mat'];
 
 		% Check if it exists
 		if (exist(fname) ~= 2) disp(['Could not load file with name: ',fname]); break; end

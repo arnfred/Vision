@@ -9,7 +9,11 @@ function [] = save_fig(f, name)
 	% position(4) = 1 - tightInset(4)% - tightInset(2);
 	% set(gca, 'Position', position);
 
-	%saveas(f, full_path);
-
-	export_fig(full_path);
+	
+	figureHandle = gcf;
+	%# make all text in the figure to size 14 and bold
+	set(findall(figureHandle,'type','text'),'fontSize',16)
+    
+    saveas(f, full_path);
+	%export_fig(full_path);
 end

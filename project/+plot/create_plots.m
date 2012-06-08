@@ -5,12 +5,20 @@ function [] = create_plots()
 	folder = [datestr(now, 'yyyy-mm-dd_HHMM'), '/']; 
 	mkdir(['img/', folder]);
 
+	% Set larger font-size
+	set(0,'DefaultAxesFontSize',16)
 
-	% Load Normal data with sigma variations to store an overview
+	% Load Normal data with sigma variations to store an overview with preconditioner
 	[psnr1 u1 res1 iter1 burn1] = load_data_sigma('mu',1,0);
 
 	% Create normal overview:
-	plot.sigma(psnr1, iter1, burn1, [folder 'sigma_overview'], 'auto');
+	plot.sigma(psnr1, iter1, burn1, [folder 'sigma_with_prec'], 'auto');
+
+	% Load Normal data with sigma variations to store an overview without preconditioner
+	[psnr1_1 u1_1 res1_1 iter1_1 burn1_1] = load_data_sigma('mu',1,0,0.001,0);
+
+	% Create normal overview:
+	plot.sigma(psnr1_1, iter1_1, burn1_1, [folder 'sigma_without_prec'], 'auto');
 
 	% Create zoom of normal overview
 	plot.cg_run(psnr1, iter1, res1, 1, 0.05, [folder 'normal_zoom'], 'auto');
