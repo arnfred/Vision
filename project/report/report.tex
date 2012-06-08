@@ -166,48 +166,75 @@ that the more extreme scales are altered more than those in between.
 \section{Results}
 
 \begin{figure}[h]
-		\begin{subfigure}[b]{0.19\textwidth}
+	\makebox[\textwidth][c]{%
+		\begin{minipage}[b]{0.25\textwidth}
                 \centering
 				\includegraphics[width=\textwidth]{img/img_22_psnr}
-				\caption{psnr of $\approx 22$}
+				\small{psnr $\approx 22$}
 				\label{psnr_22}
-		\end{subfigure}%
+		\end{minipage}%
 		~ %add desired spacing between images, e. g. ~, \quad, \qquad 
-		\begin{subfigure}[b]{0.19\textwidth}
+		\begin{minipage}[b]{0.25\textwidth}
                 \centering
 				\includegraphics[width=\textwidth]{img/img_24_psnr}
-				\caption{psnr of $\approx 24$}
+				\small{psnr $\approx 24$}
 				\label{psnr_24}
-		\end{subfigure}%
+		\end{minipage}%
 		~ %add desired spacing between images, e. g. ~, \quad, \qquad 
-		\begin{subfigure}[b]{0.19\textwidth}
+		\begin{minipage}[b]{0.25\textwidth}
                 \centering
 				\includegraphics[width=\textwidth]{img/img_26_psnr}
-				\caption{psnr of $\approx 26$}
+				\small{psnr $\approx 26$}
 				\label{psnr_26}
-		\end{subfigure}%
+		\end{minipage}%
 		~ %add desired spacing between images, e. g. ~, \quad, \qquad 
-		\begin{subfigure}[b]{0.19\textwidth}
+		\begin{minipage}[b]{0.25\textwidth}
                 \centering
 				\includegraphics[width=\textwidth]{img/img_28_psnr}
-				\caption{psnr of $\approx 28$}
+				\small{psnr $\approx 28$}
 				\label{psnr_28}
-		\end{subfigure}%
+		\end{minipage}%
 		~ %add desired spacing between images, e. g. ~, \quad, \qquad 
-		\begin{subfigure}[b]{0.19\textwidth}
+		\begin{minipage}[b]{0.25\textwidth}
                 \centering
 				\includegraphics[width=\textwidth]{img/img_30_psnr}
-				\caption{psnr of $\approx 30$}
+				\small{psnr $\approx 30$}
 				\label{psnr_30}
-		\end{subfigure}%
-		\caption{Examples of images at different psnr}
+		\end{minipage}%
+	}%
+		\caption{Examples of images at different Signal to Noise ratio}
 		\label{img_examples}
 \end{figure}
 
-To evaluate what different levels of signal to noise ratio (psnr) 
-translates to in image quality, figure \ref{img_examples} showcases some 
-examples for values typically encountered during the experiments. [Add 
-psnr of noisy image at the three noise levels]. 
+To test how the aforementioned adjustments affect the performance of the 
+denoising algorithm I calculate the signal to noise ratio (PSNR) for 
+each iteration of conjugate gradient. In order to evaluate what 
+different levels of signal to noise ratio translates to in image 
+quality, figure \ref{img_examples} showcases some examples for values 
+typically encountered during the experiments. To compare the signal to 
+noise ratio of an imaged with added gaussian noise at a variance of 
+0.05, 0.1 or 0.15  (for an image defined on [0,1]) is respectively 
+$26.3, \, 20.0$ and $16.5$ approximately. 
+
+\begin{figure}[h]
+	\makebox[\textwidth][c]{%
+		\begin{minipage}[t]{0.7\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{img/sigma_overview}
+			\caption{Variation of Sigma}
+			\label{fig:normal}
+		\end{minipage}%
+		\qquad
+		\begin{minipage}[t]{0.7\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{img/normal_zoom}
+			\caption{Residual Error}
+			\label{fig:res_error}
+		\end{minipage}%
+	}%
+\end{figure}
+
+
 
 
 % This is about WHAT the stuff I did turned out to look like
