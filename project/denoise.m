@@ -3,12 +3,13 @@
 function [u u_mu i i_mu burn p p_mu r r_mu] = denoise(sigma, scaling, remove_scales, max_burn, iter, tolerance, use_prec)
 
 	% Set variables
-	if (nargin < 1)	sigma				= 10; end
+	if (nargin < 1)	sigma				= 0.1; end
 	if (nargin < 2)	scaling				= 1; end
 	if (nargin < 3)	remove_scales		= 0; end
 	if (nargin < 4)	max_burn			= 5000; end  % These are cg iterations (about 200 per gibbs iteration)
 	if (nargin < 5)	iter				= 20000; end % Also cg iterations
 	if (nargin < 6)	use_prec			= 1; end
+    if (nargin < 7)	tolerance			= 0.001; end
 
 	% Translate sigma to image dependent sigma and set max_iter
 	sigma								= sigma * 255
@@ -30,6 +31,7 @@ function [u u_mu i i_mu burn p p_mu r r_mu] = denoise(sigma, scaling, remove_sca
 
 	% Initialize function for getting psnr
 	psnr_fun							= @(noisy) get_psnr(img_clean, noisy, border, mrf.imdims);
+    psnr_fun(N_padded)
 
 	% Get filter matrix
 	B									= gibbs.get_B(mrf);
